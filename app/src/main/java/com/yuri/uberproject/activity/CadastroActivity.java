@@ -15,55 +15,56 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.yuri.uberproject.R;
-import com.yuri.uberproject.config.ConfiguracaoFirebase;
-import com.yuri.uberproject.emuns.TipoUsuario;
-import com.yuri.uberproject.model.Usuario;
+import com.yuri.uberproject.config.ConfigurationFirebase;
+import com.yuri.uberproject.emuns.TypeUser;
+import com.yuri.uberproject.model.User;
 
 public class CadastroActivity extends AppCompatActivity {
 
-    private TextInputEditText campoNome, campoEmail, campoSenha;
+    private TextInputEditText fieldName, fieldEmail, fieldPassword;
     private RadioGroup radioGroup;
     private RadioButton radioButtonPassageiro, radioButtonMotorista;
-    private TipoUsuario tipoUsuario = TipoUsuario.NÃO_INFORMADO;
-    private FirebaseAuth autenticacao = FirebaseAuth.getInstance();
+    private TypeUser typeUser = TypeUser.UNINFORMED;
+    private FirebaseAuth auth = FirebaseAuth.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cadastro);
         initComponents();
-        verificaSePassageiroOuMotorista();
+        checksIfPassengerOrDriver();
     }
 
     private void initComponents(){
-        campoNome = findViewById(R.id.textoNomeCompleto);
-        campoSenha = findViewById(R.id.textoSenhaCad);
-        campoEmail = findViewById(R.id.textoEmailCad);
+        fieldName = findViewById(R.id.textoNomeCompleto);
+        fieldPassword = findViewById(R.id.textoSenhaCad);
+        fieldEmail = findViewById(R.id.textoEmailCad);
         radioGroup = findViewById(R.id.radioGroup2);
         radioButtonMotorista = findViewById(R.id.radioButtonMotorista);
         radioButtonPassageiro = findViewById(R.id.radioButtonPassageiro);
     }
 
-    public void cadastrarUsuario(View view){
-        if (validaCamposCadastro()){
-            String email = String.valueOf(campoEmail.getText());
-            String senha = String.valueOf(campoSenha.getText());
-            String nome = String.valueOf(campoNome.getText());
-            verificaSePassageiroOuMotorista();
+    public void registerUser(View view){
+        if (validatesFieldsRegisterUser()){
+            String email = String.valueOf(fieldEmail.getText());
+            String senha = String.valueOf(fieldPassword.getText());
+            String nome = String.valueOf(fieldName.getText());
+            checksIfPassengerOrDriver();
 
-            Usuario usuario = new Usuario();
-            usuario.setNome(nome);
-            usuario.setEmail(email);
-            usuario.setSenha(senha);
-            usuario.setTipoUsuario(this.tipoUsuario);
+            final User user = new User();
+            user.setName(nome);
+            user.setEmail(email);
+            user.setPassword(senha);
+            user.setTypeUser(this.typeUser);
 
-            autenticacao = ConfiguracaoFirebase.getAuth();
-            autenticacao.createUserWithEmailAndPassword(
+            auth = ConfigurationFirebase.getAuth();
+            auth.createUserWithEmailAndPassword(
                     email, senha
             ).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if (task.isSuccessful()){
+                            saveUserFirebase(user, task);
                         Toast.makeText(CadastroActivity.this, "Sucesso ao cadastrar usuário!", Toast.LENGTH_SHORT).show();
                     }else {
                         Toast.makeText(CadastroActivity.this, "Erro ao cadastrar usuário!", Toast.LENGTH_SHORT).show();
@@ -74,53 +75,59 @@ public class CadastroActivity extends AppCompatActivity {
         }
     }
 
-    private boolean validaCamposCadastro(){
-        String email = String.valueOf(campoEmail.getText());
-        String senha = String.valueOf(campoSenha.getText());
-        String nome = String.valueOf(campoNome.getText());
+    private void saveUserFirebase(User user, Task<AuthResult> task){
+        String idUser = task.getResult().getUser().getUid();
+        user.setId(idUser);
+        user.save();
 
-        if(isCampoVazio(nome)){
+    }
+
+    private boolean validatesFieldsRegisterUser(){
+        String email = String.valueOf(fieldEmail.getText());
+        String password = String.valueOf(fieldPassword.getText());
+        String name = String.valueOf(fieldName.getText());
+
+        if(isFieldsEmpty(name)){
             return false;
-        }else if(isCampoVazio(senha)){
+        }else if(isFieldsEmpty(password)){
             return false;
-        }else if(isCampoVazio(email)){
+        }else if(isFieldsEmpty(email)){
             return false;
-        }else if(tipoUsuarioInvalido(this.tipoUsuario)){
+        }else if(typeUserInvalid(this.typeUser)){
             return false;
         }else{
             return true;
         }
     }
 
-    private boolean isCampoVazio(String campo) {
+    private boolean isFieldsEmpty(String campo) {
         return campo.isEmpty();
     }
 
-    private void verificaSePassageiroOuMotorista(){
-
+    private void checksIfPassengerOrDriver(){
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
-                if (isMotorista()){
-                    tipoUsuario = TipoUsuario.MOTORISTA;
-                }else if(isPassageiro()){
-                    tipoUsuario = TipoUsuario.PASSAGEIRO;
+                if (isDriver()){
+                    typeUser = TypeUser.DRIVER;
+                }else if(isPassenger()){
+                    typeUser = TypeUser.PASSENGER;
                 }else {
-                    tipoUsuario = TipoUsuario.NÃO_INFORMADO;
+                    typeUser = TypeUser.UNINFORMED;
                 }
             }
         });
     }
 
-    private boolean tipoUsuarioInvalido(TipoUsuario tipoUsuario){
-        return tipoUsuario.equals(TipoUsuario.NÃO_INFORMADO);
+    private boolean typeUserInvalid(TypeUser tipoUsuario){
+        return tipoUsuario.equals(TypeUser.UNINFORMED);
     }
 
-    private boolean isMotorista(){
+    private boolean isDriver(){
         return radioButtonMotorista.isChecked();
     }
 
-    private boolean isPassageiro(){
+    private boolean isPassenger(){
         return radioButtonPassageiro.isChecked();
     }
 }

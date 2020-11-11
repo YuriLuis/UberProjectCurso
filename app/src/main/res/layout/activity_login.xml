@@ -44,7 +44,7 @@
         android:layout_marginRight="16dp"
         android:layout_marginBottom="8dp"
         android:background="@color/corBotaoEntrar"
-        android:onClick="logarButtonClick"
+        android:onClick="logInClickButton"
         android:text="Entrar"
         app:layout_constraintBottom_toTopOf="@+id/esqueceuSenha"
         app:layout_constraintEnd_toEndOf="parent"

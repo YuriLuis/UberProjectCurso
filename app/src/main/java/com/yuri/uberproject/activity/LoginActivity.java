@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -21,8 +20,8 @@ import com.yuri.uberproject.R;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private FirebaseAuth autenticacao = FirebaseAuth.getInstance();
-    private TextInputEditText campoEmail, campoSenha;
+    private FirebaseAuth auth = FirebaseAuth.getInstance();
+    private TextInputEditText fieldEmail, fieldPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,25 +32,24 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void initComponents(){
-        campoEmail = findViewById(R.id.textoEmail);
-        campoSenha = findViewById(R.id.textoSenha);
+        fieldEmail = findViewById(R.id.textoEmail);
+        fieldPassword = findViewById(R.id.textoSenha);
     }
 
-    public void logarButtonClick(View view){
-        logarUsuario();
+    public void logInClickButton(View view){
+        logInUser();
     }
 
-    private void logarUsuario(){
-        String email = String.valueOf(campoEmail.getText());
-        String senha = String.valueOf(campoSenha.getText());
+    private void logInUser(){
+        String email = String.valueOf(fieldEmail.getText());
+        String password = String.valueOf(fieldPassword.getText());
 
-
-        autenticacao.signInWithEmailAndPassword(email, senha)
+        auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if(task.isSuccessful()){
-                            abrirTelaPrincipal();
+                            openMainActivity();
                         }else {
                           String erro = "";
                           try {
@@ -79,7 +77,7 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
-    private void abrirTelaPrincipal(){
+    private void openMainActivity(){
         startActivity(new Intent(this, MapsActivity.class));
     }
 }
