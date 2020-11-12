@@ -35,7 +35,7 @@
             android:layout_margin="5dp"
             android:layout_weight="1"
             android:background="@color/corBotaoEntrar"
-            android:onClick="entrar"
+            android:onClick="loginActivity"
             android:text="Entrar"
             android:textColor="@android:color/background_light" />
 
@@ -46,7 +46,7 @@
             android:layout_margin="5dp"
             android:layout_weight="1"
             android:background="@color/corBotaoCadastrar"
-            android:onClick="cadastrar"
+            android:onClick="registerActivity"
             android:text="Cadastrar"
             android:textColor="@android:color/background_light" />
     </LinearLayout>

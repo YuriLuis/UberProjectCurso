@@ -1,8 +1,11 @@
 package com.yuri.uberproject.activity;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.RadioButton;
@@ -14,12 +17,16 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.yuri.uberproject.R;
 import com.yuri.uberproject.config.ConfigurationFirebase;
 import com.yuri.uberproject.emuns.TypeUser;
+import com.yuri.uberproject.helper.UserFirebase;
 import com.yuri.uberproject.model.User;
 
-public class CadastroActivity extends AppCompatActivity {
+public class RegisterActivity extends AppCompatActivity {
 
     private TextInputEditText fieldName, fieldEmail, fieldPassword;
     private RadioGroup radioGroup;
@@ -47,31 +54,60 @@ public class CadastroActivity extends AppCompatActivity {
     public void registerUser(View view){
         if (validatesFieldsRegisterUser()){
             String email = String.valueOf(fieldEmail.getText());
-            String senha = String.valueOf(fieldPassword.getText());
-            String nome = String.valueOf(fieldName.getText());
+            String password = String.valueOf(fieldPassword.getText());
+            String name = String.valueOf(fieldName.getText());
             checksIfPassengerOrDriver();
 
             final User user = new User();
-            user.setName(nome);
+            user.setName(name);
             user.setEmail(email);
-            user.setPassword(senha);
+            user.setPassword(password);
             user.setTypeUser(this.typeUser);
 
             auth = ConfigurationFirebase.getAuth();
             auth.createUserWithEmailAndPassword(
-                    email, senha
+                    email, password
             ).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
-                    if (task.isSuccessful()){
+                    try{
+                        if (task.isSuccessful()){
                             saveUserFirebase(user, task);
-                        Toast.makeText(CadastroActivity.this, "Sucesso ao cadastrar usuário!", Toast.LENGTH_SHORT).show();
-                    }else {
-                        Toast.makeText(CadastroActivity.this, "Erro ao cadastrar usuário!", Toast.LENGTH_SHORT).show();
+                            if(isDriver()){
+                                openActivityDriver();
+                            }else{
+                                openActivityMaps();
+                            }
+                        }else {
+                            String erro = "";
+                            try {
+                                throw task.getException();
+                            }catch (FirebaseAuthWeakPasswordException e){
+                                erro = "Digite uma senha mais forte";
+                            }catch (FirebaseAuthInvalidCredentialsException e){
+                                erro = "Por favor, digite um e-mail válido!";
+                            }catch (FirebaseAuthUserCollisionException e ){
+                                erro = "Esta conta já foi cadastrada! ";
+                            }catch (Exception e) {
+                                erro = "Erro ao entrar" + e.getMessage();
+                                e.printStackTrace();
+                            }
+
+                            new AlertDialog.Builder(RegisterActivity.this)
+                                    .setTitle("Erro")
+                                    .setMessage(erro)
+                                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                                        }
+                                    });
+                        }
+                    }catch (RuntimeException e){
+                        e.printStackTrace();
                     }
                 }
             });
-            finish();
         }
     }
 
@@ -79,7 +115,18 @@ public class CadastroActivity extends AppCompatActivity {
         String idUser = task.getResult().getUser().getUid();
         user.setId(idUser);
         user.save();
+        UserFirebase.updateNameUser(user.getName());
+    }
 
+    private void openActivityMaps(){
+        startActivity(new Intent(RegisterActivity.this, MapsActivity.class));
+        Toast.makeText(RegisterActivity.this, "Sucess register a Passenger!", Toast.LENGTH_SHORT).show();
+        finish();
+    }
+
+    private void openActivityDriver(){
+        Toast.makeText(RegisterActivity.this, "Sucess register a driver!", Toast.LENGTH_SHORT).show();
+        startActivity(new Intent(RegisterActivity.this, DriverActivity.class));
     }
 
     private boolean validatesFieldsRegisterUser(){
@@ -88,12 +135,24 @@ public class CadastroActivity extends AppCompatActivity {
         String name = String.valueOf(fieldName.getText());
 
         if(isFieldsEmpty(name)){
+            fieldName.setError("Informe o nome");
             return false;
         }else if(isFieldsEmpty(password)){
+            fieldPassword.setError("Informe a senha!");
             return false;
         }else if(isFieldsEmpty(email)){
+            fieldEmail.setError("Informe o email");
             return false;
         }else if(typeUserInvalid(this.typeUser)){
+            new AlertDialog.Builder(RegisterActivity.this)
+                    .setTitle("Erro")
+                    .setMessage("Informe se Motorista ou Passageiro")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                        }
+                    }).show();
             return false;
         }else{
             return true;
@@ -118,6 +177,7 @@ public class CadastroActivity extends AppCompatActivity {
             }
         });
     }
+
 
     private boolean typeUserInvalid(TypeUser tipoUsuario){
         return tipoUsuario.equals(TypeUser.UNINFORMED);
