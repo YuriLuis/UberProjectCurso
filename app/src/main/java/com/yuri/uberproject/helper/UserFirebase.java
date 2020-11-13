@@ -16,7 +16,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.yuri.uberproject.activity.DriverActivity;
-import com.yuri.uberproject.activity.MapsActivity;
+import com.yuri.uberproject.activity.PassengerActivity;
 import com.yuri.uberproject.config.ConfigurationFirebase;
 import com.yuri.uberproject.emuns.TypeUser;
 import com.yuri.uberproject.model.User;
@@ -69,7 +69,7 @@ public class UserFirebase {
                     if(typeUser.equals(TypeUser.DRIVER)){
                         activity.startActivity(new Intent(activity, DriverActivity.class));
                     }else {
-                        activity.startActivity(new Intent(activity, MapsActivity.class));
+                        activity.startActivity(new Intent(activity, PassengerActivity.class));
                     }
                 }
 

@@ -119,7 +119,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void openActivityMaps(){
-        startActivity(new Intent(RegisterActivity.this, MapsActivity.class));
+        startActivity(new Intent(RegisterActivity.this, PassengerActivity.class));
         Toast.makeText(RegisterActivity.this, "Sucess register a Passenger!", Toast.LENGTH_SHORT).show();
         finish();
     }
