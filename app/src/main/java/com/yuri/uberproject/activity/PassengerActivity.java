@@ -64,6 +64,12 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
         mapFragment.getMapAsync(this);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getLocationPassenger();
+    }
+
     private void initComponents() {
         destiny = findViewById(R.id.textDestino);
     }
@@ -107,14 +113,27 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
             }
         };
 
-        if (ActivityCompat.checkSelfPermission(PassengerActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(PassengerActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             locationManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER,
                     10000,
                     10,
                     locationListener
             );
+        }else {
+            new AlertDialog.Builder(PassengerActivity.this)
+                    .setTitle("Ative a opção GPS do dispositivo!")
+                    .setMessage("Erro ao tentar buscar localização, GPS está desativado! ")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            onResume();
+                        }
+                    })
+                    .show();
         }
+
     }
 
     public void callDriver(View view) {
@@ -137,6 +156,7 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
                 message.append("\nBairro: " + destiny.getBairro());
                 message.append("\nNúmero: " + destiny.getNumber());
                 message.append("\nCep: " + destiny.getZipCode());
+
                 new AlertDialog.Builder(PassengerActivity.this)
                         .setTitle("Confirme seu endereço!")
                         .setMessage(message)
