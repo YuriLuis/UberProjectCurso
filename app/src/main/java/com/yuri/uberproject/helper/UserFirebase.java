@@ -48,6 +48,15 @@ public class UserFirebase {
         return user.getCurrentUser();
     }
 
+    public static User getUserLoggedData(){
+        FirebaseUser firebaseUser = getUserCurrent();
+        User user = new User();
+        user.setId(firebaseUser.getUid());
+        user.setEmail( firebaseUser.getEmail());
+        user.setName( firebaseUser.getDisplayName());
+        return user;
+    }
+
     private static boolean isErrorInUpdateNameUser(Task<Void> task){
         return !task.isSuccessful();
     }

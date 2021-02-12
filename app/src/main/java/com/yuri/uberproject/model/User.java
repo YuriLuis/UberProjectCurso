@@ -13,11 +13,14 @@ public class User {
     private String password;
     private TypeUser typeUser;
 
+    private String latitude;
+    private String longitude;
+
     public User(){
 
     }
 
-    public void save(){
+    public void saveUser(){
         DatabaseReference databaseReference = ConfigurationFirebase.getDatabaseReference();
         DatabaseReference usuarios = databaseReference.child("usuarios").child(getId());
         usuarios.setValue(this);
@@ -62,4 +65,12 @@ public class User {
     public void setTypeUser(TypeUser typeUser) {
         this.typeUser = typeUser;
     }
+
+    public String getLatitude() {return latitude;}
+
+    public void setLatitude(String latitude) {this.latitude = latitude;}
+
+    public String getLongitude() {return longitude;}
+
+    public void setLongitude(String longitude) {this.longitude = longitude;}
 }

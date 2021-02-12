@@ -114,7 +114,7 @@ public class RegisterActivity extends AppCompatActivity {
     private void saveUserFirebase(User user, Task<AuthResult> task){
         String idUser = task.getResult().getUser().getUid();
         user.setId(idUser);
-        user.save();
+        user.saveUser();
         UserFirebase.updateNameUser(user.getName());
     }
 
