@@ -13,4 +13,5 @@
     <string name="digite_seu_destino">Digite seu destino!</string>
     <string name="meu_local">Meu local</string>
     <string name="canceled_uber">Cancelar Uber</string>
+    <string name="requisitions_texto_distancia">\" 1 Km - Aproximadamente\"</string>
 </resources>
