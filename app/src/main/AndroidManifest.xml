@@ -17,10 +17,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".activity.PassengerActivity"
+            android:name=".activity.PassageiroActivity"
             android:label="@string/title_activity_passenger"
             android:theme="@style/AppTheme.NoActionBar"></activity>
-        <activity android:name=".activity.DriverActivity" />
+        <activity android:name=".activity.MotoristaActivity" />
         <activity android:name=".activity.RegisterActivity" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
@@ -42,6 +42,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
+        -<activity android:name=".activity.CorridaActivity" android:theme="@style/AppTheme.NoActionBar" android:label="@string/title_activity_corrida" android:parentActivityName=".activity.MotoristaActivity">
+
+    </activity>
     </application>
 
 </manifest>

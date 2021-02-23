@@ -10,23 +10,21 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.yuri.uberproject.R;
-import com.yuri.uberproject.model.Requisition;
-import com.yuri.uberproject.model.User;
-
-import org.w3c.dom.Text;
+import com.yuri.uberproject.model.Requisicao;
+import com.yuri.uberproject.model.Usuario;
 
 import java.util.List;
 
-public class AdapterRequisitons extends RecyclerView.Adapter<AdapterRequisitons.MyView> {
+public class RequisicoesAdapter extends RecyclerView.Adapter<RequisicoesAdapter.MyView> {
 
-    private List<Requisition> requisitions;
+    private List<Requisicao> requisicaos;
     private Context context;
-    private User driver;
+    private Usuario motorista;
 
-    public AdapterRequisitons(List<Requisition> requisitions, Context context, User driver) {
-        this.requisitions = requisitions;
+    public RequisicoesAdapter(List<Requisicao> requisicaos, Context context, Usuario motorista) {
+        this.requisicaos = requisicaos;
         this.context = context;
-        this.driver = driver;
+        this.motorista = motorista;
     }
 
     @NonNull
@@ -39,15 +37,17 @@ public class AdapterRequisitons extends RecyclerView.Adapter<AdapterRequisitons.
 
     @Override
     public void onBindViewHolder(@NonNull MyView holder, int position) {
-        Requisition requisition = requisitions.get(position);
-        User passageiro = requisition.getPassenger();
+        Requisicao requisicao = requisicaos.get(position);
+        Usuario passageiro = requisicao.getPassenger();
+
+        motorista.getLatitude();
         holder.nome.setText(passageiro.getName());
         holder.distancia.setText(R.string.requisitions_texto_distancia);
     }
 
     @Override
     public int getItemCount() {
-        return this.requisitions.size();
+        return this.requisicaos.size();
     }
 
     public class MyView extends RecyclerView.ViewHolder{

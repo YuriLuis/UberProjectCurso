@@ -1,6 +1,8 @@
 package com.yuri.uberproject.model;
 
-public class Destiny {
+import java.io.Serializable;
+
+public class Destiny implements Serializable {
 
     private String street;
     private String number;

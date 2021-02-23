@@ -14,4 +14,5 @@
     <string name="meu_local">Meu local</string>
     <string name="canceled_uber">Cancelar Uber</string>
     <string name="requisitions_texto_distancia">\" 1 Km - Aproximadamente\"</string>
+    <string name="title_activity_corrida">CorridaActivity</string>
 </resources>

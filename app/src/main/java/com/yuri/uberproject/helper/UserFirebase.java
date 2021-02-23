@@ -15,11 +15,11 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
-import com.yuri.uberproject.activity.DriverActivity;
-import com.yuri.uberproject.activity.PassengerActivity;
+import com.yuri.uberproject.activity.MotoristaActivity;
+import com.yuri.uberproject.activity.PassageiroActivity;
 import com.yuri.uberproject.config.ConfigurationFirebase;
 import com.yuri.uberproject.emuns.TypeUser;
-import com.yuri.uberproject.model.User;
+import com.yuri.uberproject.model.Usuario;
 
 public class UserFirebase {
 
@@ -48,13 +48,13 @@ public class UserFirebase {
         return user.getCurrentUser();
     }
 
-    public static User getUserLoggedData(){
+    public static Usuario getUserLoggedData(){
         FirebaseUser firebaseUser = getUserCurrent();
-        User user = new User();
-        user.setId(firebaseUser.getUid());
-        user.setEmail( firebaseUser.getEmail());
-        user.setName( firebaseUser.getDisplayName());
-        return user;
+        Usuario usuario = new Usuario();
+        usuario.setId(firebaseUser.getUid());
+        usuario.setEmail( firebaseUser.getEmail());
+        usuario.setName( firebaseUser.getDisplayName());
+        return usuario;
     }
 
     private static boolean isErrorInUpdateNameUser(Task<Void> task){
@@ -73,12 +73,12 @@ public class UserFirebase {
             ref.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    User user = snapshot.getValue(User.class);
-                    TypeUser typeUser = user.getTypeUser();
+                    Usuario usuario = snapshot.getValue(Usuario.class);
+                    TypeUser typeUser = usuario.getTypeUser();
                     if(typeUser.equals(TypeUser.DRIVER)){
-                        activity.startActivity(new Intent(activity, DriverActivity.class));
+                        activity.startActivity(new Intent(activity, MotoristaActivity.class));
                     }else {
-                        activity.startActivity(new Intent(activity, PassengerActivity.class));
+                        activity.startActivity(new Intent(activity, PassageiroActivity.class));
                     }
                 }
 

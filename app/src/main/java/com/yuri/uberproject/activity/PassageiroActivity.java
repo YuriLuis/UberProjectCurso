@@ -45,8 +45,8 @@ import com.yuri.uberproject.R;
 import com.yuri.uberproject.config.ConfigurationFirebase;
 import com.yuri.uberproject.helper.UserFirebase;
 import com.yuri.uberproject.model.Destiny;
-import com.yuri.uberproject.model.Requisition;
-import com.yuri.uberproject.model.User;
+import com.yuri.uberproject.model.Requisicao;
+import com.yuri.uberproject.model.Usuario;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,20 +54,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-public class PassengerActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class PassageiroActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private EditText destinyText;
     private LinearLayout linearLayout;
-    private Button buttonCallUber;
+    private Button botaoChamarUber;
 
     private GoogleMap mMap;
     private FirebaseAuth auth = ConfigurationFirebase.getAuth();
     private LocationManager locationManager;
     private LocationListener locationListener;
-    private LatLng userPlace;
-    private boolean uberCall = false;
+    private LatLng myLocal;
+    private boolean chamaUber = false;
     private DatabaseReference databaseReference;
-    private Requisition requisition;
+    private Requisicao requisicao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,9 +76,9 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("Iniciar uma viagem");
         setSupportActionBar(toolbar);
-        initComponents();
-        clickButtonCallUber();
-        checkStatusRequisition();
+        iniciarComponentes();
+        eventClickBotaoChamarUber();
+        verificaStatusRequisicao();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -89,14 +89,14 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
     @Override
     protected void onResume() {
         super.onResume();
-        getLocationPassenger();
+        getLocalGpsUsuario();
     }
 
-    private void initComponents() {
+    private void iniciarComponentes() {
 
         databaseReference = ConfigurationFirebase.getDatabaseReference();
         destinyText = findViewById(R.id.textDestino);
-        buttonCallUber = findViewById(R.id.buttonChamarMotorista);
+        botaoChamarUber = findViewById(R.id.buttonChamarMotorista);
         linearLayout = findViewById(R.id.linearLayoutDestiny);
     }
 
@@ -112,33 +112,33 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        getLocationPassenger();
+        getLocalGpsUsuario();
         // Add a marker in Sydney and move the camera
 
     }
 
-    private void checkStatusRequisition(){
-        User user = UserFirebase.getUserLoggedData();
+    private void verificaStatusRequisicao(){
+        Usuario usuario = UserFirebase.getUserLoggedData();
         DatabaseReference databaseReference = this.databaseReference.child("requisitions");
         final Query requisicaoPesquisa = databaseReference.orderByChild("passenger/id")
-                .equalTo( user.getId());
+                .equalTo( usuario.getId());
         requisicaoPesquisa.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<Requisition> list = new ArrayList<>();
+                List<Requisicao> list = new ArrayList<>();
                 for (DataSnapshot ds : snapshot.getChildren()){
-                    list.add(ds.getValue(Requisition.class));
+                    list.add(ds.getValue(Requisicao.class));
                 }
 
                 Collections.reverse(list);
 
                 if(list.size() != 0){
-                    requisition = list.get(0);
-                    switch (requisition.getStatus()){
-                        case Requisition.STATUS_AGUARDANDO :
+                    requisicao = list.get(0);
+                    switch (requisicao.getStatus()){
+                        case Requisicao.STATUS_AGUARDANDO :
                             linearLayout.setVisibility(View.GONE);
-                            buttonCallUber.setText("Cancelar Uber");
-                            uberCall = true;
+                            botaoChamarUber.setText("Cancelar Uber");
+                            chamaUber = true;
                             break;
                     }
 
@@ -153,11 +153,11 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
         });
     }
 
-    public void clickButtonCallUber(){
-        buttonCallUber.setOnClickListener(new View.OnClickListener() {
+    public void eventClickBotaoChamarUber(){
+        botaoChamarUber.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!uberCall){
+                if(!chamaUber){
                     String destino = destinyText.getText().toString();
                     if (validateFieldDestiny()) {
                         Address address = getAddress(destino);
@@ -178,7 +178,7 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
                             message.append("\nNúmero: " + destiny.getNumber());
                             message.append("\nCep: " + destiny.getZipCode());
 
-                            new AlertDialog.Builder(PassengerActivity.this)
+                            new AlertDialog.Builder(PassageiroActivity.this)
                                     .setTitle("Confirme seu endereço!")
                                     .setMessage(message)
                                     .setPositiveButton("Confirmar", new DialogInterface.OnClickListener() {
@@ -186,7 +186,7 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
                                         public void onClick(DialogInterface dialogInterface, int i) {
                                             //Salva requisição para o motorista!
                                             saveRequisition(destiny);
-                                            uberCall = true;
+                                            chamaUber = true;
                                         }
                                     })
                                     .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
@@ -197,38 +197,38 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
                                     }).show();
                         }
                     } else {
-                        Toast.makeText(PassengerActivity.this, "Informe o endereço de destino!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(PassageiroActivity.this, "Informe o endereço de destino!", Toast.LENGTH_SHORT).show();
                     }
                 }else {
-                    uberCall = false;
+                    chamaUber = false;
                 }
             }
         });
     }
 
-    private void getLocationPassenger() {
+    private void getLocalGpsUsuario() {
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(@NonNull Location location) {
                 double latitude = location.getLatitude();
                 double longitude = location.getLongitude();
-                userPlace = new LatLng(latitude, longitude);
+                myLocal = new LatLng(latitude, longitude);
                 //LatLng sydney = new LatLng(-34, 151);
                 mMap.clear();
                 mMap.addMarker(
                         new MarkerOptions()
-                                .position(userPlace)
+                                .position(myLocal)
                                 .title("Meu Local!")
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_emoji_people_black_18dp))
                 );
                 mMap.moveCamera(
-                        CameraUpdateFactory.newLatLngZoom(userPlace, 18)
+                        CameraUpdateFactory.newLatLngZoom(myLocal, 18)
                 );
             }
         };
 
-        if (ActivityCompat.checkSelfPermission(PassengerActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (ActivityCompat.checkSelfPermission(PassageiroActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             locationManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER,
@@ -237,7 +237,7 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
                     locationListener
             );
         }else {
-            new AlertDialog.Builder(PassengerActivity.this)
+            new AlertDialog.Builder(PassageiroActivity.this)
                     .setTitle("Ative a opção GPS do dispositivo!")
                     .setMessage("Erro ao tentar buscar localização, GPS está desativado! ")
                     .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
@@ -252,36 +252,36 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
     }
 
     private void saveRequisition(Destiny destiny){
-        Requisition requisition = new Requisition();
-        saveDestinyInRequisition(destiny, requisition);
+        Requisicao requisicao = new Requisicao();
+        saveDestinyInRequisition(destiny, requisicao);
 
-        User userPassenger = createUserForRequisition();
+        Usuario usuarioPassenger = createUserForRequisition();
 
-        requisition.setPassenger(userPassenger);
-        requisition.setStatus(Requisition.STATUS_AGUARDANDO);
-        requisition.saveRequisiton();
+        requisicao.setPassenger(usuarioPassenger);
+        requisicao.setStatus(Requisicao.STATUS_AGUARDANDO);
+        requisicao.saveRequisiton();
 
         linearLayout.setVisibility(View.GONE);
-        buttonCallUber.setText(R.string.canceled_uber);
+        botaoChamarUber.setText(R.string.canceled_uber);
     }
 
-    private User createUserForRequisition(){
-        User userPassenger = UserFirebase.getUserLoggedData();
-        if(userPassenger != null) {
-            userPassenger.setLatitude( String.valueOf(userPlace.latitude));
-            userPassenger.setLongitude(String.valueOf(userPlace.longitude));
+    private Usuario createUserForRequisition(){
+        Usuario usuarioPassenger = UserFirebase.getUserLoggedData();
+        if(usuarioPassenger != null) {
+            usuarioPassenger.setLatitude( String.valueOf(myLocal.latitude));
+            usuarioPassenger.setLongitude(String.valueOf(myLocal.longitude));
         } else {
             if(BuildConfig.DEBUG){
                 Log.v("Erro :" , "Erro ao criar Usuario para requisição! ");
             }
         }
 
-        return userPassenger;
+        return usuarioPassenger;
     }
 
-    private void saveDestinyInRequisition(Destiny destiny, Requisition requisition){
-        if(destiny != null && requisition != null){
-            requisition.setDestiny(destiny);
+    private void saveDestinyInRequisition(Destiny destiny, Requisicao requisicao){
+        if(destiny != null && requisicao != null){
+            requisicao.setDestiny(destiny);
         }
         else {
             if(BuildConfig.DEBUG){
@@ -291,7 +291,7 @@ public class PassengerActivity extends AppCompatActivity implements OnMapReadyCa
     }
 
     private Address getAddress(String address) {
-        Geocoder geocoder = new Geocoder(PassengerActivity.this, Locale.getDefault());
+        Geocoder geocoder = new Geocoder(PassageiroActivity.this, Locale.getDefault());
         try {
 
             List<Address> listAddress = geocoder.getFromLocationName(address, 1);

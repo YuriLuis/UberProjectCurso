@@ -24,7 +24,7 @@ import com.yuri.uberproject.R;
 import com.yuri.uberproject.config.ConfigurationFirebase;
 import com.yuri.uberproject.emuns.TypeUser;
 import com.yuri.uberproject.helper.UserFirebase;
-import com.yuri.uberproject.model.User;
+import com.yuri.uberproject.model.Usuario;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -58,11 +58,11 @@ public class RegisterActivity extends AppCompatActivity {
             String name = String.valueOf(fieldName.getText());
             checksIfPassengerOrDriver();
 
-            final User user = new User();
-            user.setName(name);
-            user.setEmail(email);
-            user.setPassword(password);
-            user.setTypeUser(this.typeUser);
+            final Usuario usuario = new Usuario();
+            usuario.setName(name);
+            usuario.setEmail(email);
+            usuario.setPassword(password);
+            usuario.setTypeUser(this.typeUser);
 
             auth = ConfigurationFirebase.getAuth();
             auth.createUserWithEmailAndPassword(
@@ -72,7 +72,7 @@ public class RegisterActivity extends AppCompatActivity {
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     try{
                         if (task.isSuccessful()){
-                            saveUserFirebase(user, task);
+                            saveUserFirebase(usuario, task);
                             if(isDriver()){
                                 openActivityDriver();
                             }else{
@@ -111,22 +111,22 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
-    private void saveUserFirebase(User user, Task<AuthResult> task){
+    private void saveUserFirebase(Usuario usuario, Task<AuthResult> task){
         String idUser = task.getResult().getUser().getUid();
-        user.setId(idUser);
-        user.saveUser();
-        UserFirebase.updateNameUser(user.getName());
+        usuario.setId(idUser);
+        usuario.saveUser();
+        UserFirebase.updateNameUser(usuario.getName());
     }
 
     private void openActivityMaps(){
-        startActivity(new Intent(RegisterActivity.this, PassengerActivity.class));
+        startActivity(new Intent(RegisterActivity.this, PassageiroActivity.class));
         Toast.makeText(RegisterActivity.this, "Sucess register a Passenger!", Toast.LENGTH_SHORT).show();
         finish();
     }
 
     private void openActivityDriver(){
         Toast.makeText(RegisterActivity.this, "Sucess register a driver!", Toast.LENGTH_SHORT).show();
-        startActivity(new Intent(RegisterActivity.this, DriverActivity.class));
+        startActivity(new Intent(RegisterActivity.this, MotoristaActivity.class));
     }
 
     private boolean validatesFieldsRegisterUser(){

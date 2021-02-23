@@ -3,12 +3,16 @@ package com.yuri.uberproject.model;
 import com.google.firebase.database.DatabaseReference;
 import com.yuri.uberproject.config.ConfigurationFirebase;
 
-public class Requisition {
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Requisicao implements Serializable {
 
     private String id;
     private String status;
-    private User passenger;
-    private User driver;
+    private Usuario passenger;
+    private Usuario driver;
     private Destiny destiny;
 
     public static final String STATUS_AGUARDANDO = "aguardando";
@@ -24,6 +28,19 @@ public class Requisition {
         setId(idRequisition);
 
         requisitions.child(getId()).setValue(this);
+    }
+
+    public void atualizar() {
+        DatabaseReference firebaseRef = ConfigurationFirebase.getDatabaseReference();
+        DatabaseReference requisicoes = firebaseRef.child("requisitions");
+
+        DatabaseReference requisicao = requisicoes.child(getId());
+
+        Map objeto = new HashMap();
+        objeto.put("motorista", getDriver() );
+        objeto.put("status", getStatus());
+
+        requisicao.updateChildren( objeto );
     }
 
     public String getId() {
@@ -42,19 +59,19 @@ public class Requisition {
         this.status = status;
     }
 
-    public User getPassenger() {
+    public Usuario getPassenger() {
         return passenger;
     }
 
-    public void setPassenger(User passenger) {
+    public void setPassenger(Usuario passenger) {
         this.passenger = passenger;
     }
 
-    public User getDriver() {
+    public Usuario getDriver() {
         return driver;
     }
 
-    public void setDriver(User driver) {
+    public void setDriver(Usuario driver) {
         this.driver = driver;
     }
 
@@ -65,4 +82,5 @@ public class Requisition {
     public void setDestiny(Destiny destiny) {
         this.destiny = destiny;
     }
+
 }

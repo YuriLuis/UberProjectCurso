@@ -5,7 +5,9 @@ import com.google.firebase.database.Exclude;
 import com.yuri.uberproject.config.ConfigurationFirebase;
 import com.yuri.uberproject.emuns.TypeUser;
 
-public class User {
+import java.io.Serializable;
+
+public class Usuario implements Serializable {
 
     private String id;
     private String name;
@@ -16,7 +18,7 @@ public class User {
     private String latitude;
     private String longitude;
 
-    public User(){
+    public Usuario(){
 
     }
 
