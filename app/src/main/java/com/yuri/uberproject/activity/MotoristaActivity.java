@@ -199,8 +199,6 @@ public class MotoristaActivity extends AppCompatActivity {
                         }
                 )
         );
-
-        recuperarRequisicoes();
     }
 
 }
