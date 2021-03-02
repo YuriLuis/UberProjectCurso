@@ -17,6 +17,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import androidx.annotation.NonNull;
@@ -68,6 +69,7 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
     private boolean chamaUber = false;
     private DatabaseReference databaseReference;
     private Requisicao requisicao;
+    private Marker marcadorPassageiro;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,11 +81,6 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
         iniciarComponentes();
         eventClickBotaoChamarUber();
         verificaStatusRequisicao();
-
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
     }
 
     @Override
@@ -93,11 +90,15 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
     }
 
     private void iniciarComponentes() {
-
         databaseReference = ConfigurationFirebase.getDatabaseReference();
         destinyText = findViewById(R.id.textDestino);
         botaoChamarUber = findViewById(R.id.buttonChamarMotorista);
         linearLayout = findViewById(R.id.linearLayoutDestiny);
+
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(PassageiroActivity.this);
     }
 
     /**
@@ -207,6 +208,7 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
     }
 
     private void getLocalGpsUsuario() {
+        //auth.signOut();
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
@@ -215,6 +217,7 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
                 double longitude = location.getLongitude();
                 myLocal = new LatLng(latitude, longitude);
                 //LatLng sydney = new LatLng(-34, 151);
+
                 mMap.clear();
                 mMap.addMarker(
                         new MarkerOptions()
@@ -248,6 +251,19 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
                     })
                     .show();
         }
+    }
+
+    private void adicionaMarcadorPassageiro(LatLng localizacao, String titulo){
+
+        if( marcadorPassageiro != null )
+            marcadorPassageiro.remove();
+
+        marcadorPassageiro = mMap.addMarker(
+                new MarkerOptions()
+                        .position(localizacao)
+                        .title(titulo)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_emoji_people_black_18dp))
+        );
 
     }
 

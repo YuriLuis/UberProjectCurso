@@ -31,7 +31,7 @@ public class RegisterActivity extends AppCompatActivity {
     private TextInputEditText fieldName, fieldEmail, fieldPassword;
     private RadioGroup radioGroup;
     private RadioButton radioButtonPassageiro, radioButtonMotorista;
-    private TypeUser typeUser = TypeUser.UNINFORMED;
+    private TypeUser typeUser = TypeUser.NAO_INFORMADO;
     private FirebaseAuth auth = FirebaseAuth.getInstance();
 
     @Override
@@ -168,11 +168,11 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
                 if (isDriver()){
-                    typeUser = TypeUser.DRIVER;
+                    typeUser = TypeUser.MOTORISTA;
                 }else if(isPassenger()){
-                    typeUser = TypeUser.PASSENGER;
+                    typeUser = TypeUser.PASSAGEIRO;
                 }else {
-                    typeUser = TypeUser.UNINFORMED;
+                    typeUser = TypeUser.NAO_INFORMADO;
                 }
             }
         });
@@ -180,7 +180,7 @@ public class RegisterActivity extends AppCompatActivity {
 
 
     private boolean typeUserInvalid(TypeUser tipoUsuario){
-        return tipoUsuario.equals(TypeUser.UNINFORMED);
+        return tipoUsuario.equals(TypeUser.NAO_INFORMADO);
     }
 
     private boolean isDriver(){

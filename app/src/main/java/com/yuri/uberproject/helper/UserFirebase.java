@@ -75,7 +75,7 @@ public class UserFirebase {
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     Usuario usuario = snapshot.getValue(Usuario.class);
                     TypeUser typeUser = usuario.getTypeUser();
-                    if(typeUser.equals(TypeUser.DRIVER)){
+                    if(typeUser.equals(TypeUser.MOTORISTA)){
                         activity.startActivity(new Intent(activity, MotoristaActivity.class));
                     }else {
                         activity.startActivity(new Intent(activity, PassageiroActivity.class));
