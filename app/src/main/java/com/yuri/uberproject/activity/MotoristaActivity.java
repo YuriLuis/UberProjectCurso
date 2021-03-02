@@ -41,14 +41,16 @@ import java.util.List;
 
 public class MotoristaActivity extends AppCompatActivity {
 
-    private FirebaseAuth auth = ConfigurationFirebase.getAuth();
-    private DatabaseReference databaseReference = ConfigurationFirebase.getDatabaseReference();
-
-    private RecyclerView recyclerViewRequisitions;
+    //Componentes
+    private RecyclerView recyclerRequisicoes;
     private TextView textResultado;
+
+    private FirebaseAuth autenticacao;
+    private DatabaseReference firebaseRef;
     private List<Requisicao> listaRequisicoes = new ArrayList<>();
-    private Usuario motorista = UserFirebase.getUserLoggedData();
-    private RequisicoesAdapter adapter = new RequisicoesAdapter(listaRequisicoes, MotoristaActivity.this, this.motorista);
+    private RequisicoesAdapter adapter;
+    private Usuario motorista;
+
     private LocationManager locationManager;
     private LocationListener locationListener;
 
@@ -56,94 +58,101 @@ public class MotoristaActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_motorista);
-        initComponents();
 
-        getLocalGpsMotorista();
+        inicializarComponentes();
+
+        //Recuperar localizacao do usuário
+        recuperarLocalizacaoUsuario();
+
     }
 
-    private void getLocalGpsMotorista() {
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(@NonNull Location location) {
-                String latitude =  String.valueOf(location.getLatitude());
-                String longitude = String.valueOf(location.getLongitude());
+    @Override
+    protected void onStart() {
+        super.onStart();
+        verificaStatusRequisicao();
+    }
 
-                if( latitudeELongetudeIsOk(latitude,longitude)){
-                    motorista.setLatitude(latitude);
-                    motorista.setLongitude(longitude);
-                    //Não recebe mais os dados de update de localização do usuário!!!
-                    locationManager.removeUpdates(locationListener);
-                    adapter.notifyDataSetChanged();
+    private void verificaStatusRequisicao(){
+
+        Usuario usuarioLogado = UserFirebase.getUserLoggedData();
+        DatabaseReference firebaseRef = ConfigurationFirebase.getDatabaseReference();
+
+        DatabaseReference requisicoes = firebaseRef.child("requisitions");
+
+        Query requisicoesPesquisa = requisicoes.orderByChild("motorista/id")
+                .equalTo( usuarioLogado.getId() );
+
+        requisicoesPesquisa.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for( DataSnapshot ds: dataSnapshot.getChildren() ){
+
+                    Requisicao requisicao = ds.getValue( Requisicao.class );
+
+                    if( requisicao.getStatus().equals(Requisicao.STATUS_A_CAMINHO)
+                            || requisicao.getStatus().equals(Requisicao.STATUS_VIAGEM)){
+                        abrirTelaCorrida(requisicao.getId(), motorista, true);
+                    }
+
                 }
             }
-        };
-
-        if (ActivityCompat.checkSelfPermission(MotoristaActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    0,
-                    10,
-                    locationListener
-            );
-        }else {
-            new AlertDialog.Builder(MotoristaActivity.this)
-                    .setTitle("Ative a opção GPS do dispositivo!")
-                    .setMessage("Erro ao tentar buscar localização, GPS está desativado! ")
-                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            onResume();
-                        }
-                    })
-                    .show();
-        }
-
-    }
-
-    private boolean latitudeELongetudeIsOk(String a, String b){
-        return !a.isEmpty() && !b.isEmpty();
-    }
-
-    private void initComponents(){
-        getSupportActionBar().setTitle("Requisições");
-
-        recyclerViewRequisitions = findViewById(R.id.recyclerRequisitons);
-        textResultado = findViewById(R.id.textResultado);
-
-        recuperarRequisicoes();
-        configuraRecyclerViewRequisitions(adapter);
-        eventClickRecyclerView();
-    }
-
-    private void recuperarRequisicoes(){
-        DatabaseReference requisicoes = databaseReference.child("requisitions");
-        Query requisicaoPesquisa = requisicoes.orderByChild("status")
-                .equalTo(Requisicao.STATUS_AGUARDANDO);
-        requisicaoPesquisa.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.getChildrenCount() > 0) {
-                    textResultado.setVisibility(View.GONE);
-                    recyclerViewRequisitions.setVisibility(View.VISIBLE);
-                }else{
-                    textResultado.setVisibility(View.VISIBLE);
-                    recyclerViewRequisitions.setVisibility(View.GONE);
-                }
-
-                for (DataSnapshot ds : snapshot.getChildren()){
-                    Requisicao requisicao = ds.getValue(Requisicao.class);
-                    listaRequisicoes.add(requisicao);
-                }
-                adapter.notifyDataSetChanged();
-            }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
+            public void onCancelled(DatabaseError databaseError) {
 
             }
         });
+
+    }
+
+    private void recuperarLocalizacaoUsuario() {
+
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+                //recuperar latitude e longitude
+                String latitude = String.valueOf(location.getLatitude());
+                String longitude = String.valueOf(location.getLongitude());
+
+                if( !latitude.isEmpty() && !longitude.isEmpty() ){
+                    motorista.setLatitude(latitude);
+                    motorista.setLongitude(longitude);
+                    locationManager.removeUpdates(locationListener);
+                    adapter.notifyDataSetChanged();
+                }
+
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+
+        //Solicitar atualizações de localização
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
+            locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    0,
+                    0,
+                    locationListener
+            );
+        }
+
+
     }
 
     @Override
@@ -153,38 +162,56 @@ public class MotoristaActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menuSair:
-                auth.signOut();
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()){
+            case R.id.menuSair :
+                autenticacao.signOut();
                 finish();
                 break;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
-    private void configuraRecyclerViewRequisitions(RequisicoesAdapter requisicoesAdapter){
-        if(requisicoesAdapter != null){
-            RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(MotoristaActivity.this);
-            recyclerViewRequisitions.setLayoutManager(layoutManager);
-            recyclerViewRequisitions.setHasFixedSize(true);
-            recyclerViewRequisitions.setAdapter(requisicoesAdapter);
-        }
+    private void abrirTelaCorrida(String idRequisicao, Usuario motorista, boolean requisicaoAtiva){
+        Intent i = new Intent(MotoristaActivity.this, CorridaActivity.class );
+        i.putExtra("idRequisicao", idRequisicao );
+        i.putExtra("motorista", motorista );
+        i.putExtra("requisicaoAtiva", requisicaoAtiva );
+        startActivity( i );
     }
 
-    private void eventClickRecyclerView(){
-        recyclerViewRequisitions.addOnItemTouchListener(
+    private void inicializarComponentes(){
+
+        getSupportActionBar().setTitle("Requisições");
+
+        //Configura componentes
+        recyclerRequisicoes = findViewById(R.id.recyclerRequisitons);
+        textResultado = findViewById(R.id.textResultado);
+
+        //Configurações iniciais
+        motorista = UserFirebase.getUserLoggedData();
+        autenticacao = ConfigurationFirebase.getAuth();
+        firebaseRef = ConfigurationFirebase.getDatabaseReference();
+
+        //Configurar RecyclerView
+        adapter = new RequisicoesAdapter(listaRequisicoes, getApplicationContext(), motorista );
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
+        recyclerRequisicoes.setLayoutManager( layoutManager );
+        recyclerRequisicoes.setHasFixedSize(true);
+        recyclerRequisicoes.setAdapter( adapter );
+
+        //Adiciona evento de clique no recycler
+        recyclerRequisicoes.addOnItemTouchListener(
                 new RecyclerItemClickListener(
-                        MotoristaActivity.this,
-                        recyclerViewRequisitions,
+                        getApplicationContext(),
+                        recyclerRequisicoes,
                         new RecyclerItemClickListener.OnItemClickListener() {
                             @Override
                             public void onItemClick(View view, int position) {
                                 Requisicao requisicao = listaRequisicoes.get(position);
-                                Intent i = new Intent(MotoristaActivity.this, CorridaActivity.class);
-                                i.putExtra("idRequisicao", requisicao.getId());
-                                i.putExtra("motorista", motorista);
-                                startActivity(i);
+                                abrirTelaCorrida(requisicao.getId(), motorista, false);
                             }
 
                             @Override
@@ -199,6 +226,47 @@ public class MotoristaActivity extends AppCompatActivity {
                         }
                 )
         );
+
+        recuperarRequisicoes();
+
     }
+
+    private void recuperarRequisicoes(){
+
+        DatabaseReference requisicoes = firebaseRef.child("requisitions");
+
+        Query requisicaoPesquisa = requisicoes.orderByChild("status")
+                .equalTo(Requisicao.STATUS_AGUARDANDO);
+
+        requisicaoPesquisa.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                if( dataSnapshot.getChildrenCount() > 0 ){
+                    textResultado.setVisibility( View.GONE );
+                    recyclerRequisicoes.setVisibility( View.VISIBLE );
+                }else {
+                    textResultado.setVisibility( View.VISIBLE );
+                    recyclerRequisicoes.setVisibility( View.GONE );
+                }
+
+                listaRequisicoes.clear();
+                for ( DataSnapshot ds: dataSnapshot.getChildren() ){
+                    Requisicao requisicao = ds.getValue( Requisicao.class );
+                    listaRequisicoes.add( requisicao );
+                }
+
+                adapter.notifyDataSetChanged();
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+
 
 }

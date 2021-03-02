@@ -27,8 +27,9 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_gravity="bottom"
-        android:theme="@style/botaoPadrao"
-        android:text="Aceitar Corrida" />
+        android:onClick="aceitarCorrida"
+        android:text="Aceitar Corrida"
+        android:theme="@style/botaoPadrao" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

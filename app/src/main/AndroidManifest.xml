@@ -44,8 +44,8 @@
         </activity>
 
 
-        -<activity android:name=".activity.CorridaActivity" android:theme="@style/AppTheme.NoActionBar" android:label="@string/title_activity_corrida" android:parentActivityName=".activity.MotoristaActivity">
-
+        <activity android:name=".activity.CorridaActivity" android:theme="@style/AppTheme.NoActionBar" android:label="@string/title_activity_corrida" android:parentActivityName=".activity.MotoristaActivity">
+        <meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.yuri.uberproject.activity.MotoristaActivity"/>
     </activity>
     </application>
 
